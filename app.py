@@ -7,8 +7,13 @@ cc = OpenCC('s2t')  # 簡體轉繁體
 
 @app.route('/convert', methods=['POST'])
 def convert():
-    data = request.get_json()
+    data = request.get_json(force=True)
     text = data.get('text', '')
+
+    # 💥 防炸：如果收到 list，就 join 起來變成字串
+    if isinstance(text, list):
+        text = ' '.join(map(str, text))  # 把 list 裡的詞合成一行
+
     converted = cc.convert(text)
     return jsonify({"traditional": converted})
 
