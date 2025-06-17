@@ -10,10 +10,14 @@ def convert():
     data = request.get_json(force=True)
     text = data.get('text', '')
 
-    # 💥 防炸：如果收到 list，就 join 起來變成字串
-    if isinstance(text, list):
-        text = ' '.join(map(str, text))  # 把 list 裡的詞合成一行
+    # 假設 text 是一包 list[dict]，每個都有 content 欄位
+    if isinstance(text, list) and isinstance(text[0], dict) and "content" in text[0]:
+        converted = [cc.convert(item["content"]) for item in text]
+        return jsonify({"traditional": converted})
 
+    # 原始單句字串處理邏輯
+    elif isinstance(text, list):
+        text = ' '.join(map(str, text))
     converted = cc.convert(text)
     return jsonify({"traditional": converted})
 
