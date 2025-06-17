@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from opencc import OpenCC
+import os
 
 app = Flask(__name__)
 cc = OpenCC('s2t')  # 簡體轉繁體
@@ -12,4 +13,5 @@ def convert():
     return jsonify({"traditional": converted})
 
 if __name__ == '__main__':
-    app.run()
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
