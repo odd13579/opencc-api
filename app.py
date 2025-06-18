@@ -1,26 +1,33 @@
 from flask import Flask, request, jsonify
 from opencc import OpenCC
 import os
+import re
 
 app = Flask(__name__)
-cc = OpenCC('s2t')  # 簡體轉繁體
+cc = OpenCC('s2t')  # 簡體轉繁體，只轉中文字用
+
+# ✅ 只轉中文字，保留格式與非中文符號
+def convert_only_chinese(text: str) -> str:
+    def convert_match(match):
+        return cc.convert(match.group(0))
+    pattern = re.compile(r'[\u4e00-\u9fff]+')  # 中文 unicode 區段
+    return pattern.sub(convert_match, text)
 
 @app.route('/convert', methods=['POST'])
 def convert():
     data = request.get_json(force=True)
     text = data.get('text', '')
 
-    # ➤ 判斷 text 是 list 就逐筆轉換
     if isinstance(text, list):
-        # 若是 list of dict 且含 content 欄位
+        # list of dict（content 欄位）
         if all(isinstance(item, dict) and 'content' in item for item in text):
-            converted = [cc.convert(item['content']) for item in text]
+            converted = [convert_only_chinese(item['content']) for item in text]
         else:
-            # 一般 list of string 處理
-            converted = [cc.convert(str(item)) for item in text]
+            # 一般 list of string
+            converted = [convert_only_chinese(str(item)) for item in text]
     else:
-        # 單一字串處理
-        converted = cc.convert(str(text))
+        # 單一字串
+        converted = convert_only_chinese(str(text))
 
     return jsonify({"traditional": converted})
 
