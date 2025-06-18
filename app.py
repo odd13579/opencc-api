@@ -10,15 +10,18 @@ def convert():
     data = request.get_json(force=True)
     text = data.get('text', '')
 
-    # 假設 text 是一包 list[dict]，每個都有 content 欄位
-    if isinstance(text, list) and isinstance(text[0], dict) and "content" in text[0]:
-        converted = [cc.convert(item["content"]) for item in text]
-        return jsonify({"traditional": converted})
+    # ➤ 判斷 text 是 list 就逐筆轉換
+    if isinstance(text, list):
+        # 若是 list of dict 且含 content 欄位
+        if all(isinstance(item, dict) and 'content' in item for item in text):
+            converted = [cc.convert(item['content']) for item in text]
+        else:
+            # 一般 list of string 處理
+            converted = [cc.convert(str(item)) for item in text]
+    else:
+        # 單一字串處理
+        converted = cc.convert(str(text))
 
-    # 原始單句字串處理邏輯
-    elif isinstance(text, list):
-        text = ' '.join(map(str, text))
-    converted = cc.convert(text)
     return jsonify({"traditional": converted})
 
 if __name__ == '__main__':
