@@ -19,7 +19,12 @@ def convert():
         data = request.get_json(force=True)
         text = data.get('text', '')
 
+        # ✅ 新增 log：看得到誰打你的 API、送了什麼
+        print("🔵 收到 /convert 請求")
+        print(f"➡️ 原始 text: {text}")
+
         if not text:
+            print("⚠️ text 欄位為空")
             return jsonify({"traditional": "", "msg": "text 欄位為空"}), 200
 
         if isinstance(text, list):
@@ -28,14 +33,16 @@ def convert():
             elif all(isinstance(item, str) for item in text):
                 converted = [convert_only_chinese(item) for item in text]
             else:
-                # 混亂格式或無法辨識的 list 結構
+                print("❌ list 結構錯誤")
                 return jsonify({"traditional": "", "msg": "list 結構格式錯誤"}), 400
         else:
             converted = convert_only_chinese(str(text))
 
+        print(f"✅ 轉換結果: {converted}")
         return jsonify({"traditional": converted}), 200
 
     except Exception as e:
+        print(f"🔥 錯誤: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
